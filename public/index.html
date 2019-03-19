@@ -12,17 +12,34 @@
     <div class="centered-form">
         <div class="centered-form__box">
             <h1>Join</h1>
-            <form action="/chat.html">
+            <form action="/chat.html" id="mainform">
                 <label>Display Name:</label>
                 <input type="text" name="username" placeholder="Display Name" required>
-                <label>Room Name</label>
-                <input type="text" name="room" placeholder="Room" required>
+                <label>Type in a Room Name</label>
+                <input type="text" id="roomname" name="room" placeholder="Room" required>
+                <div id="roomselecter">
+
+                </div><BR>
                 <button>Join</button> 
+                <script id="room-template" type="text/html">
+                    <div>
+                        <p>
+                            <select id="roomselect" name="roomselected" onchange="onRoomSelect()">
+                              <option value="">Or select an existing Room Name</option>
+                              {{#roomlist}}
+                              <option value="{{room}}">{{room}}:[{{users}}]</option>
+                              {{/roomlist}}
+                            </select>
+                        </p>
+                    </div>
+                </script>
             </form>
         </div>
 
     </div>
-
+    <!-- mustache allows for dynamic client side HTML templates -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/mustache.js/3.0.1/mustache.min.js"></script>
+    <script src="/socket.io/socket.io.js"></script>
+    <script src="/js/index.js"></script>
 </body>
-
 </HTML>

@@ -7,6 +7,8 @@ const socketio = require('socket.io')
 const Filter = require('bad-words')
 const { generateMesage, generateLocationMesage } = require('./utils/messages')
 const { addUser, removeUser, getUser, getUsersInRoom } = require('./utils/users')
+const { UpdateDeleteRoom, getRooms, addRoom} = require('./utils/rooms')
+
 
 const port = process.env.PORT || 3000
 const LOG = process.env.OUTPUT_EXPRESS_HTTP_LOG || "YES"
@@ -35,14 +37,24 @@ io.on('connection', (socket) =>
 {
     console.log('new websoket connection')
 
-    socket.on('join', ({ username, room }, callback) =>
+    socket.on('getroomlist', (callback) =>
     {
+        const roomlist = getRooms()
+        return callback(roomlist)
+    })
+
+    socket.on('join', ({ username, room, roomselected }, callback) =>
+    {
+
+        if (roomselected) room = roomselected
 
         const { error, user } = addUser({ id: socket.id, username, room })
 
         if (error) return callback(error)
 
         console.log(`user ${user.username} is joining ${user.room}`)
+
+        const roomlist = addRoom(user.room)
         socket.join(user.room)
 
         socket.emit('message',  generateMesage('Admin', "Welcome!"))
@@ -55,6 +67,9 @@ io.on('connection', (socket) =>
             users: getUsersInRoom(user.room)
         })
         callback()
+
+        socket.broadcast.emit('roomlistupdate', generateMesage('Admin', roomlist))
+
     })
 
     socket.on('sendMessage', (ImcomingMessage, callback) =>
@@ -90,6 +105,7 @@ io.on('connection', (socket) =>
 
         if (!user) return
         console.log(`user ${user.username} is leaving ${user.room}`)
+        const roomlist = UpdateDeleteRoom(user.room)
 
         // inform everyone in that room that someone has left
         io.to(user.room).emit('message', generateMesage('Admin', `${user.username} has left`))
@@ -100,6 +116,9 @@ io.on('connection', (socket) =>
             room: user.room,
             users: getUsersInRoom(user.room)
         })
+
+        socket.broadcast.emit('roomlistupdate', generateMesage('Admin', roomlist))
+
     })
 })
 
